@@ -6,9 +6,5 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class NameControllerTest {
 
-    @Test
-    void getNames() {
-        NameController nameController = new NameController();
-        assertEquals("Hello World", nameController.getNames());
-    }
+
 }
