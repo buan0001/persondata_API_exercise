@@ -75,7 +75,7 @@ class ExternalApiHandlerTest {
     }
 
     @Test
-    void testFullApiHandlerTwice(){
+    void testFullApiHandlerTwiceWithSameName(){
         ExternalApiHandler externalApiHandler = new ExternalApiHandler();
 
         FullPersonDto response = externalApiHandler.getFullPersonData("John");
@@ -85,6 +85,37 @@ class ExternalApiHandlerTest {
         //assertNotNull(response2);
         assertEquals(response, response2);
     }
+
+    @Test
+    void testFullApiHandlerTwiceWithSameFirstNameDifferentLast(){
+        ExternalApiHandler externalApiHandler = new ExternalApiHandler();
+
+        FullPersonDto response = externalApiHandler.getFullPersonData("John d");
+        FullPersonDto response2 = externalApiHandler.getFullPersonData("John b");
+
+        assertNotNull(response);
+        assertNotNull(response2);
+        assertNotEquals(response, response2);
+        assertEquals(response.firstName(), response2.firstName());
+        assertNotEquals(response.lastName(), response2.lastName());
+    }
+
+    @Test
+    void testFullApiHandlerTwiceWithSameFirstNameDifferentLastAndMiddle(){
+        ExternalApiHandler externalApiHandler = new ExternalApiHandler();
+
+        FullPersonDto response = externalApiHandler.getFullPersonData("John a b");
+        FullPersonDto response2 = externalApiHandler.getFullPersonData("John c d");
+
+        assertNotNull(response);
+        assertNotNull(response2);
+        assertNotEquals(response, response2);
+        assertEquals(response.firstName(), response2.firstName());
+        assertNotEquals(response.lastName(), response2.lastName());
+        assertNotEquals(response.middleName(), response2.middleName());
+    }
+
+
 
 //    @Test
 //    void splitTesting(){

@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.HashSet;
+import java.util.Objects;
 
 @Service
 public class ExternalApiHandler {
@@ -22,16 +23,16 @@ public class ExternalApiHandler {
     }
 
     public FullPersonDto getFullPersonData(String name) {
-        PersonWithNames tempPerson = new PersonWithNames(name);
-        if (names.add(tempPerson.getFullName())) {
+        PersonWithNames personWithNames = new PersonWithNames(name);
+        String fiN = personWithNames.getFirstName();
+        if (names.add(fiN)) {
             System.out.println("Name added to set");
 
-            // Get the names
-            PersonWithNames personWithNames = new PersonWithNames(name);
+
             // Do API calls, save the responses in DTOs
-            PersonAgeDto personAgeResponse = getAgeFromApi(name);
-            PersonNationalityDto personNationalityResponse = getNationalityFromApi(name);
-            PersonGenderDto personGenderResponse = getGenderFromApi(name);
+            PersonAgeDto personAgeResponse = getAgeFromApi(fiN);
+            PersonNationalityDto personNationalityResponse = getNationalityFromApi(fiN);
+            PersonGenderDto personGenderResponse = getGenderFromApi(fiN);
 
 
             FullPersonDto response = new FullPersonDto(personWithNames.getFullName(), personWithNames.getFirstName(), personWithNames.getMiddleName(), personWithNames.getLastName(),
@@ -46,7 +47,23 @@ public class ExternalApiHandler {
 
         } else {
             System.out.println("Name already in set");
-            FullPersonDto found = entries.stream().filter(e -> e.fullName().equals(tempPerson.getFullName())).findFirst().orElse(null);
+            FullPersonDto found = entries.stream().filter(e -> e.fullName().equals(personWithNames.getFullName())).findFirst().orElse(
+                    entries.stream().filter(e -> e.firstName().equals(personWithNames.getFirstName())).findFirst().orElse(null)
+            );
+            if (found == null) {
+                throw new RuntimeException("Name not found in set - very strange!!!");
+            }
+            else if (!Objects.equals(personWithNames.getMiddleName(), found.middleName()) || !Objects.equals(personWithNames.getLastName(), found.lastName())) {
+                FullPersonDto entryWithDifferentNameParts = new FullPersonDto(personWithNames, found);
+                System.out.println(entryWithDifferentNameParts);
+                entries.add(entryWithDifferentNameParts);
+                System.out.println("entries after adding new entry: ");
+
+                for (FullPersonDto entry : entries) {
+                    System.out.println(entry);
+                }
+                return entryWithDifferentNameParts;
+            }
             System.out.println(found);
             return found;
 
@@ -68,7 +85,7 @@ public class ExternalApiHandler {
     }
 
     public PersonNationalityDto getNationalityFromApi(String name) {
-       // WebClient webClient = WebClient.create();
+        // WebClient webClient = WebClient.create();
         PersonNationalityDto personNationalityResponse = webClient.get().uri(NATIONALITY_URL + "?name=" + name)
                 .retrieve()
                 .bodyToMono(PersonNationalityDto.class)
@@ -79,7 +96,7 @@ public class ExternalApiHandler {
     }
 
     public PersonGenderDto getGenderFromApi(String name) {
-       // WebClient webClient = WebClient.create();
+        // WebClient webClient = WebClient.create();
         PersonGenderDto personGenderResponse = webClient.get().uri(GENDER_URL + "?name=" + name)
                 .retrieve()
                 .bodyToMono(PersonGenderDto.class)
